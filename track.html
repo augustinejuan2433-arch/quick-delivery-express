@@ -7,76 +7,19 @@
 <title>Track Shipment | Quick Delivery Express</title>
 <link rel="stylesheet" href="styles.css">
 <style>
-.tracking-page {
-min-height: 85vh;
-background: #090909;
-color: white;
-padding: 75px 7%;
-}
-.track-container {
-max-width: 750px;
-margin: auto;
-text-align: center;
-}
-.track-container h1 {
-font-size: clamp(35px, 6vw, 55px);
-margin-bottom: 15px;
-}
-.track-container h1 span {color:#c9a44c;}
-.track-container p {color:#bbb;margin-bottom:30px;}
-.track-form {
-background:white;
-color:#111;
-padding:30px;
-border-top:4px solid #c9a44c;
-text-align:left;
-}
-.track-form label {
-display:block;
-font-weight:bold;
-margin-bottom:10px;
-}
-.track-form input {
-width:100%;
-padding:16px;
-border:1px solid #ddd;
-font-size:16px;
-margin-bottom:15px;
-}
-.track-form button {
-width:100%;
-padding:16px;
-background:#c9a44c;
-border:0;
-font-weight:bold;
-font-size:15px;
-cursor:pointer;
-}
-.result {
-display:none;
-margin-top:25px;
-padding:25px;
-background:#fff;
-color:#111;
-text-align:left;
-border-left:4px solid #c9a44c;
-}
-.result h2 {margin-bottom:12px;}
-.status {
-display:inline-block;
-background:#eee5cc;
-color:#765817;
-padding:7px 12px;
-font-size:12px;
-font-weight:bold;
-margin:10px 0;
-}
-.result p {color:#555;margin:8px 0;}
-.back-link {
-display:inline-block;
-color:#c9a44c;
-margin-top:25px;
-}
+.tracking-page{min-height:85vh;background:#090909;color:white;padding:75px 7%}
+.track-container{max-width:750px;margin:auto;text-align:center}
+.track-container h1{font-size:clamp(35px,6vw,55px)}
+.track-container h1 span{color:#c9a44c}
+.track-container p{color:#bbb;margin-bottom:25px}
+.track-form{background:white;color:#111;padding:30px;border-top:4px solid #c9a44c;text-align:left}
+.track-form label{display:block;font-weight:bold;margin-bottom:10px}
+.track-form input{width:100%;box-sizing:border-box;padding:16px;border:1px solid #ddd;font-size:16px;margin-bottom:15px}
+.track-form button{width:100%;padding:16px;background:#c9a44c;border:0;font-weight:bold;font-size:15px;cursor:pointer}
+.result{display:none;margin-top:25px;padding:25px;background:white;color:#111;text-align:left;border-left:4px solid #c9a44c}
+.result p{color:#555;margin:12px 0}
+.status{display:inline-block;background:#eee5cc;color:#765817;padding:7px 12px;font-size:12px;font-weight:bold;margin:10px 0}
+.back-link{display:inline-block;color:#c9a44c;margin-top:25px}
 </style>
 </head>
 <body>
@@ -84,8 +27,7 @@ margin-top:25px;
 <header class="site-header">
 <a class="brand" href="index.html">
 <span class="brand-mark">Q</span>
-<span>QUICK DELIVERY <b>EXPRESS</b>
-<small>INTERNATIONAL LOGISTICS</small></span>
+<span>QUICK DELIVERY <b>EXPRESS</b><small>INTERNATIONAL LOGISTICS</small></span>
 </a>
 <nav>
 <a href="index.html">Home</a>
@@ -96,14 +38,14 @@ margin-top:25px;
 
 <main class="tracking-page">
 <div class="track-container">
-<p class="eyebrow">QUICK DELIVERY EXPRESS</p>
+<p>QUICK DELIVERY EXPRESS</p>
 <h1>Track Your <span>Shipment.</span></h1>
-<p>Enter your unique tracking number to check your parcel's latest recorded progress.</p>
+<p>Enter your unique tracking number to check your parcel's latest progress.</p>
 
 <form class="track-form" id="trackForm">
 <label for="trackingNumber">Your Tracking Number</label>
-<input type="text" id="trackingNumber" placeholder="Example: QDE-2026-001" required>
-<button type="submit">TRACK MY SHIPMENT →</button>
+<input type="text" id="trackingNumber" placeholder="Enter your tracking number" required>
+<button type="submit" id="trackButton">TRACK MY SHIPMENT →</button>
 </form>
 
 <div class="result" id="result">
@@ -112,8 +54,8 @@ margin-top:25px;
 <p><strong>Tracking Number:</strong> <span id="displayCode"></span></p>
 <p><strong>Current Location:</strong> <span id="displayLocation"></span></p>
 <p><strong>Destination:</strong> <span id="displayDestination"></span></p>
-<p><strong>Last Update:</strong> <span id="displayDate"></span></p>
-<p id="displayMessage"></p>
+<p><strong>Estimated Delivery:</strong> <span id="displayDate"></span></p>
+<p><strong>Update:</strong> <span id="displayMessage"></span></p>
 </div>
 
 <a class="back-link" href="index.html">← Back to Homepage</a>
@@ -123,45 +65,75 @@ margin-top:25px;
 <footer>
 <a class="brand" href="index.html">
 <span class="brand-mark">Q</span>
-<span>QUICK DELIVERY <b>EXPRESS</b>
-<small>INTERNATIONAL LOGISTICS</small></span>
+<span>QUICK DELIVERY <b>EXPRESS</b><small>INTERNATIONAL LOGISTICS</small></span>
 </a>
 <span>© 2026 Quick Delivery Express. All rights reserved.</span>
 <span>United States • United Kingdom</span>
 </footer>
 
 <script>
-const shipments = {};
+const SUPABASE_URL = "https://aqfzyfbhyupomcvveqlz.supabase.co";
+const SUPABASE_KEY = "PASTE_YOUR_PUBLISHABLE_KEY_HERE";
 
-document.getElementById("trackForm").addEventListener("submit", function(e) {
+document.getElementById("trackForm").addEventListener("submit", async function(e) {
 e.preventDefault();
 
-const code = document.getElementById("trackingNumber").value.trim().toUpperCase();
+const code = document.getElementById("trackingNumber").value.trim();
 const result = document.getElementById("result");
+const button = document.getElementById("trackButton");
 
-if (shipments[code]) {
-const shipment = shipments[code];
-
-document.getElementById("shipmentStatus").textContent = shipment.status;
-document.getElementById("displayCode").textContent = code;
-document.getElementById("displayLocation").textContent = shipment.location;
-document.getElementById("displayDestination").textContent = shipment.destination;
-document.getElementById("displayDate").textContent = shipment.date;
-document.getElementById("displayMessage").textContent = shipment.message;
-
+button.disabled = true;
+button.textContent = "SEARCHING...";
 result.style.display = "block";
-} else {
-result.style.display = "block";
+
+try {
+const response = await fetch(
+SUPABASE_URL + "/rest/v1/rpc/track_shipment",
+{
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+"apikey": SUPABASE_KEY,
+"Authorization": "Bearer " + SUPABASE_KEY
+},
+body: JSON.stringify({p_tracking_number: code})
+}
+);
+
+if (!response.ok) {
+throw new Error("Tracking service error: " + response.status);
+}
+
+const data = await response.json();
+const shipment = data[0];
+
+if (!shipment) {
 document.getElementById("shipmentStatus").textContent = "NOT FOUND";
 document.getElementById("displayCode").textContent = code;
 document.getElementById("displayLocation").textContent = "Not available";
 document.getElementById("displayDestination").textContent = "Not available";
 document.getElementById("displayDate").textContent = "Not available";
-document.getElementById("displayMessage").textContent = "We could not find this tracking number. Please contact our support team.";
+document.getElementById("displayMessage").textContent = "We could not find this tracking number. Please check it and try again.";
+} else {
+document.getElementById("shipmentStatus").textContent = shipment.status_label || "Shipment Registered";
+document.getElementById("displayCode").textContent = shipment.tracking_number || code;
+document.getElementById("displayLocation").textContent = shipment.latest_location || "Update pending";
+document.getElementById("displayDestination").textContent = shipment.destination_country || "Not available";
+document.getElementById("displayDate").textContent = shipment.estimated_delivery || "Not available";
+document.getElementById("displayMessage").textContent = shipment.public_note || "No additional update.";
 }
+} catch (error) {
+document.getElementById("shipmentStatus").textContent = "SERVICE UNAVAILABLE";
+document.getElementById("displayCode").textContent = code;
+document.getElementById("displayLocation").textContent = "Not available";
+document.getElementById("displayDestination").textContent = "Not available";
+document.getElementById("displayDate").textContent = "Not available";
+document.getElementById("displayMessage").textContent = "Please try again later or contact support.";
+}
+
+button.disabled = false;
+button.textContent = "TRACK MY SHIPMENT →";
 });
 </script>
-
 </body>
-  </html>
-  
+</html>
