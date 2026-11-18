@@ -1,7 +1,167 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Track a shipment | Quick Delivery Express</title><link rel="stylesheet" href="styles.css"></head><body>
-<header class="site-header"><a class="brand" href="index.html"><span class="brand-mark">Q</span><span>QUICK DELIVERY <b>EXPRESS</b><small>INTERNATIONAL LOGISTICS</small></span></a><nav><a href="index.html">Home</a><a href="track.html">Track shipment</a><a class="nav-button" href="admin.html">Staff login</a></nav></header>
-<main class="page-wrap"><p class="eyebrow">PUBLIC TRACKING</p><h1>Track your shipment.</h1><p class="lead">Enter the exact tracking number shared by Quick Delivery Express.</p>
-<form id="trackForm" class="panel"><label for="code">Tracking number</label><div class="inline-form"><input id="code" autocomplete="off" placeholder="QDE-2026-XXXXXXXXXX" required><button class="button gold">Track</button></div><p class="muted">For your privacy, this page displays shipment progress only—not sender or recipient contact details.</p></form>
-<div id="result" class="panel result hidden" aria-live="polite"></div></main>
-<footer><a class="brand" href="index.html"><span class="brand-mark">Q</span><span>QUICK DELIVERY <b>EXPRESS</b><small>INTERNATIONAL LOGISTICS</small></span></a><span>© Quick Delivery Express</span></footer>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><script src="track.js"></script></body></html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track Shipment | Quick Delivery Express</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.tracking-page {
+min-height: 85vh;
+background: #090909;
+color: white;
+padding: 75px 7%;
+}
+.track-container {
+max-width: 750px;
+margin: auto;
+text-align: center;
+}
+.track-container h1 {
+font-size: clamp(35px, 6vw, 55px);
+margin-bottom: 15px;
+}
+.track-container h1 span {color:#c9a44c;}
+.track-container p {color:#bbb;margin-bottom:30px;}
+.track-form {
+background:white;
+color:#111;
+padding:30px;
+border-top:4px solid #c9a44c;
+text-align:left;
+}
+.track-form label {
+display:block;
+font-weight:bold;
+margin-bottom:10px;
+}
+.track-form input {
+width:100%;
+padding:16px;
+border:1px solid #ddd;
+font-size:16px;
+margin-bottom:15px;
+}
+.track-form button {
+width:100%;
+padding:16px;
+background:#c9a44c;
+border:0;
+font-weight:bold;
+font-size:15px;
+cursor:pointer;
+}
+.result {
+display:none;
+margin-top:25px;
+padding:25px;
+background:#fff;
+color:#111;
+text-align:left;
+border-left:4px solid #c9a44c;
+}
+.result h2 {margin-bottom:12px;}
+.status {
+display:inline-block;
+background:#eee5cc;
+color:#765817;
+padding:7px 12px;
+font-size:12px;
+font-weight:bold;
+margin:10px 0;
+}
+.result p {color:#555;margin:8px 0;}
+.back-link {
+display:inline-block;
+color:#c9a44c;
+margin-top:25px;
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+<a class="brand" href="index.html">
+<span class="brand-mark">Q</span>
+<span>QUICK DELIVERY <b>EXPRESS</b>
+<small>INTERNATIONAL LOGISTICS</small></span>
+</a>
+<nav>
+<a href="index.html">Home</a>
+<a href="index.html#services">Services</a>
+<a href="track.html">Track Shipment</a>
+</nav>
+</header>
+
+<main class="tracking-page">
+<div class="track-container">
+<p class="eyebrow">QUICK DELIVERY EXPRESS</p>
+<h1>Track Your <span>Shipment.</span></h1>
+<p>Enter your unique tracking number to check your parcel's latest recorded progress.</p>
+
+<form class="track-form" id="trackForm">
+<label for="trackingNumber">Your Tracking Number</label>
+<input type="text" id="trackingNumber" placeholder="Example: QDE-2026-001" required>
+<button type="submit">TRACK MY SHIPMENT →</button>
+</form>
+
+<div class="result" id="result">
+<h2>Shipment Information</h2>
+<div class="status" id="shipmentStatus"></div>
+<p><strong>Tracking Number:</strong> <span id="displayCode"></span></p>
+<p><strong>Current Location:</strong> <span id="displayLocation"></span></p>
+<p><strong>Destination:</strong> <span id="displayDestination"></span></p>
+<p><strong>Last Update:</strong> <span id="displayDate"></span></p>
+<p id="displayMessage"></p>
+</div>
+
+<a class="back-link" href="index.html">← Back to Homepage</a>
+</div>
+</main>
+
+<footer>
+<a class="brand" href="index.html">
+<span class="brand-mark">Q</span>
+<span>QUICK DELIVERY <b>EXPRESS</b>
+<small>INTERNATIONAL LOGISTICS</small></span>
+</a>
+<span>© 2026 Quick Delivery Express. All rights reserved.</span>
+<span>United States • United Kingdom</span>
+</footer>
+
+<script>
+const shipments = {};
+
+document.getElementById("trackForm").addEventListener("submit", function(e) {
+e.preventDefault();
+
+const code = document.getElementById("trackingNumber").value.trim().toUpperCase();
+const result = document.getElementById("result");
+
+if (shipments[code]) {
+const shipment = shipments[code];
+
+document.getElementById("shipmentStatus").textContent = shipment.status;
+document.getElementById("displayCode").textContent = code;
+document.getElementById("displayLocation").textContent = shipment.location;
+document.getElementById("displayDestination").textContent = shipment.destination;
+document.getElementById("displayDate").textContent = shipment.date;
+document.getElementById("displayMessage").textContent = shipment.message;
+
+result.style.display = "block";
+} else {
+result.style.display = "block";
+document.getElementById("shipmentStatus").textContent = "NOT FOUND";
+document.getElementById("displayCode").textContent = code;
+document.getElementById("displayLocation").textContent = "Not available";
+document.getElementById("displayDestination").textContent = "Not available";
+document.getElementById("displayDate").textContent = "Not available";
+document.getElementById("displayMessage").textContent = "We could not find this tracking number. Please contact our support team.";
+}
+});
+</script>
+
+</body>
+  </html>
+  
