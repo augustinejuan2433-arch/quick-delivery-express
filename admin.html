@@ -1,0 +1,15 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Staff dashboard | Quick Delivery Express</title><link rel="stylesheet" href="styles.css"></head><body>
+<header class="site-header"><a class="brand" href="index.html"><span class="brand-mark">Q</span><span>QUICK DELIVERY <b>EXPRESS</b><small>OPERATIONS PORTAL</small></span></a><nav><a href="index.html">Public website</a><a href="track.html">Tracking page</a></nav></header>
+<main class="page-wrap admin-wrap"><p class="eyebrow">PRIVATE OPERATIONS</p><h1>Shipment management.</h1><div id="loginPanel" class="panel"><h2>Staff sign in</h2><p class="muted">Sign in with the administrator account created in Supabase.</p><form id="loginForm"><label>Email</label><input id="email" type="email" required autocomplete="username"><label>Password</label><input id="password" type="password" required autocomplete="current-password"><button class="button gold full">Sign in</button></form><p id="loginMessage" class="message" aria-live="polite"></p></div>
+<section id="dashboard" class="hidden"><div class="dash-head"><div><h2>Operations dashboard</h2><p class="muted">Create shipments and enter tracking updates manually.</p></div><button id="logout" class="button outline">Sign out</button></div>
+<div class="panel"><h2>Register a shipment</h2><form id="shipmentForm" class="form-grid">
+<div><label>Sender name *</label><input id="sender_name" required></div><div><label>Sender email</label><input id="sender_email" type="email"></div>
+<div><label>Recipient name *</label><input id="recipient_name" required></div><div><label>Recipient email</label><input id="recipient_email" type="email"></div>
+<div><label>Recipient phone</label><input id="recipient_phone"></div><div><label>Origin country *</label><select id="origin_country" required></select></div>
+<div><label>Destination country *</label><select id="destination_country" required></select></div><div><label>Estimated delivery</label><input id="estimated_delivery" type="date"></div>
+<div class="wide"><label>Current location</label><input id="latest_location" placeholder="e.g. London, United Kingdom"></div>
+<div class="wide"><label>Public tracking note</label><textarea id="public_note" rows="2" placeholder="A short update visible to the recipient"></textarea></div>
+<div class="wide"><button class="button gold">Create shipment & tracking number</button></div></form><p id="createMessage" class="message" aria-live="polite"></p></div>
+<div class="panel"><div class="dash-head"><h2>Recent shipments</h2><button id="refresh" class="button outline">Refresh</button></div><div id="shipments" class="shipment-list"><p class="muted">Loading shipments…</p></div></div></section></main>
+<footer><span>Quick Delivery Express • Private staff portal</span><span>Keep administrator credentials confidential.</span></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><script src="admin.js"></script></body></html>

@@ -1,0 +1,7 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Track a shipment | Quick Delivery Express</title><link rel="stylesheet" href="styles.css"></head><body>
+<header class="site-header"><a class="brand" href="index.html"><span class="brand-mark">Q</span><span>QUICK DELIVERY <b>EXPRESS</b><small>INTERNATIONAL LOGISTICS</small></span></a><nav><a href="index.html">Home</a><a href="track.html">Track shipment</a><a class="nav-button" href="admin.html">Staff login</a></nav></header>
+<main class="page-wrap"><p class="eyebrow">PUBLIC TRACKING</p><h1>Track your shipment.</h1><p class="lead">Enter the exact tracking number shared by Quick Delivery Express.</p>
+<form id="trackForm" class="panel"><label for="code">Tracking number</label><div class="inline-form"><input id="code" autocomplete="off" placeholder="QDE-2026-XXXXXXXXXX" required><button class="button gold">Track</button></div><p class="muted">For your privacy, this page displays shipment progress only—not sender or recipient contact details.</p></form>
+<div id="result" class="panel result hidden" aria-live="polite"></div></main>
+<footer><a class="brand" href="index.html"><span class="brand-mark">Q</span><span>QUICK DELIVERY <b>EXPRESS</b><small>INTERNATIONAL LOGISTICS</small></span></a><span>© Quick Delivery Express</span></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><script src="track.js"></script></body></html>
