@@ -10,25 +10,25 @@
 .dashboard {
 background:#f6f5f1;
 min-height:100vh;
-padding:45px 6%;
+padding:35px 5%;
 }
 .dashboard-header {
 display:flex;
 justify-content:space-between;
 align-items:center;
-gap:20px;
+gap:15px;
 flex-wrap:wrap;
-margin-bottom:30px;
+margin-bottom:25px;
 }
 .dashboard-header h1 {font-size:30px;}
 .dashboard-header span {color:#a27e2e;}
 .panel {
 background:white;
-padding:25px;
-margin-bottom:25px;
+padding:22px;
+margin-bottom:22px;
 border-top:3px solid #c9a44c;
 }
-.panel h2 {margin-bottom:20px;}
+.panel h2 {margin-bottom:18px;}
 .form-grid {
 display:grid;
 grid-template-columns:repeat(2,1fr);
@@ -48,47 +48,59 @@ font-size:14px;
 background:white;
 }
 .form-grid textarea {min-height:85px;}
-.form-grid .full-field {grid-column:1/-1;}
+.full-field {grid-column:1/-1;}
 .gold-button {
 background:#c9a44c;
 color:#090909;
-padding:14px 22px;
+padding:13px 20px;
 border:0;
 font-weight:bold;
 cursor:pointer;
 }
-.shipment-list {
-overflow-x:auto;
+.cancel-button {
+background:#555;
+color:white;
+padding:13px 20px;
+border:0;
+cursor:pointer;
 }
+.shipment-list {overflow-x:auto;}
 table {
 width:100%;
 border-collapse:collapse;
-min-width:650px;
+min-width:750px;
 }
 th,td {
-padding:13px;
+padding:12px;
 border-bottom:1px solid #eee;
 text-align:left;
 font-size:13px;
 }
 th {background:#090909;color:#c9a44c;}
-.delete-button {
-background:#8b2525;
-color:white;
+.action-button {
 border:0;
 padding:8px 10px;
+margin:2px;
 cursor:pointer;
+font-weight:bold;
 }
+.edit-button {background:#c9a44c;color:#090909;}
+.delete-button {background:#8b2525;color:white;}
 .notice {
 background:#fff3d5;
-padding:15px;
+padding:14px;
 margin-bottom:20px;
 font-size:13px;
 }
+.tracking-code {
+background:#f5edda;
+padding:12px;
+font-weight:bold;
+}
 @media(max-width:650px) {
 .form-grid {grid-template-columns:1fr;}
-.form-grid .full-field {grid-column:auto;}
-.dashboard {padding:30px 4%;}
+.full-field {grid-column:auto;}
+.dashboard {padding:25px 4%;}
 }
 </style>
 </head>
@@ -116,13 +128,15 @@ font-size:13px;
 </div>
 
 <div class="notice">
-<strong>Important:</strong> This is a demonstration dashboard. Shipment records are currently stored only in this browser. A secure database and staff login must be connected before handling real customer information.
+<strong>Demonstration version:</strong> Records are saved only in this browser. Connect a secure shared database and staff login before using real customer information.
 </div>
 
 <section class="panel">
-<h2>Register New Shipment</h2>
+<h2 id="formTitle">Register New Shipment</h2>
 
 <form id="shipmentForm" class="form-grid">
+<input type="hidden" id="editCode">
+
 <div>
 <label for="sender">Sender Name</label>
 <input id="sender" required>
@@ -167,7 +181,12 @@ font-size:13px;
 </div>
 
 <div class="full-field">
-<button class="gold-button" type="submit">CREATE SHIPMENT</button>
+<p id="trackingDisplay" class="tracking-code" hidden></p>
+</div>
+
+<div class="full-field">
+<button class="gold-button" id="submitButton" type="submit">CREATE SHIPMENT</button>
+<button class="cancel-button" id="cancelButton" type="button" hidden>Cancel Edit</button>
 </div>
 </form>
 </section>
@@ -181,12 +200,13 @@ font-size:13px;
 <th>Tracking Number</th>
 <th>Recipient</th>
 <th>Destination</th>
+<th>Location</th>
 <th>Status</th>
-<th>Action</th>
+<th>Actions</th>
 </tr>
 </thead>
 <tbody id="shipmentTable">
-<tr><td colspan="5">No shipments registered yet.</td></tr>
+<tr><td colspan="6">No shipments registered yet.</td></tr>
 </tbody>
 </table>
 </div>
@@ -202,11 +222,35 @@ font-size:13px;
 const STORAGE_KEY = "qde_demo_shipments";
 
 function getShipments() {
+try {
 return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+} catch {
+return [];
+}
 }
 
 function saveShipments(data) {
 localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function generateCode() {
+let code;
+const shipments = getShipments();
+do {
+code = "QDE-2026-" +
+Math.random().toString(36).substring(2, 8).toUpperCase();
+} while (shipments.some(s => s.code === code));
+return code;
+}
+
+function escapeHTML(value) {
+return String(value ?? "").replace(/[&<>"']/g, char => ({
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+'"':"&quot;",
+"'":"&#039;"
+})[char]);
 }
 
 function renderShipments() {
@@ -214,54 +258,123 @@ const table = document.getElementById("shipmentTable");
 const shipments = getShipments();
 
 if (!shipments.length) {
-table.innerHTML = '<tr><td colspan="5">No shipments registered yet.</td></tr>';
+table.innerHTML =
+'<tr><td colspan="6">No shipments registered yet.</td></tr>';
 return;
 }
 
 table.innerHTML = shipments.map(s => `
 <tr>
-<td>${s.code}</td>
-<td>${s.recipient}</td>
-<td>${s.destination}</td>
-<td>${s.status}</td>
-<td><button class="delete-button" data-code="${s.code}">Delete</button></td>
+<td>${escapeHTML(s.code)}</td>
+<td>${escapeHTML(s.recipient)}</td>
+<td>${escapeHTML(s.destination)}</td>
+<td>${escapeHTML(s.location)}</td>
+<td>${escapeHTML(s.status)}</td>
+<td>
+<button class="action-button edit-button"
+data-action="edit" data-code="${escapeHTML(s.code)}">Edit</button>
+<button class="action-button delete-button"
+data-action="delete" data-code="${escapeHTML(s.code)}">Delete</button>
+</td>
 </tr>
 `).join("");
 }
 
-document.getElementById("shipmentForm").addEventListener("submit", function(e) {
+function resetForm() {
+document.getElementById("shipmentForm").reset();
+document.getElementById("editCode").value = "";
+document.getElementById("formTitle").textContent = "Register New Shipment";
+document.getElementById("submitButton").textContent = "CREATE SHIPMENT";
+document.getElementById("cancelButton").hidden = true;
+document.getElementById("trackingDisplay").hidden = true;
+}
+
+document.getElementById("shipmentForm")
+.addEventListener("submit", function(e) {
 e.preventDefault();
 
 const shipments = getShipments();
-const code = "QDE-2026-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+const editCode = document.getElementById("editCode").value;
 
-const shipment = {
-code,
-sender: document.getElementById("sender").value,
-recipient: document.getElementById("recipient").value,
-origin: document.getElementById("origin").value,
-destination: document.getElementById("destination").value,
-location: document.getElementById("location").value,
+const details = {
+sender: document.getElementById("sender").value.trim(),
+recipient: document.getElementById("recipient").value.trim(),
+origin: document.getElementById("origin").value.trim(),
+destination: document.getElementById("destination").value.trim(),
+location: document.getElementById("location").value.trim(),
 status: document.getElementById("status").value,
-message: document.getElementById("message").value,
-date: new Date().toLocaleString()
+message: document.getElementById("message").value.trim()
 };
 
-shipments.push(shipment);
+if (editCode) {
+const index = shipments.findIndex(s => s.code === editCode);
+if (index === -1) {
+alert("Shipment not found.");
+return;
+}
+shipments[index] = {...shipments[index], ...details,
+updated: new Date().toLocaleString()};
 saveShipments(shipments);
+alert("Shipment updated successfully.");
+} else {
+const code = generateCode();
+shipments.push({
+...details,
+code,
+date: new Date().toLocaleString()
+});
+saveShipments(shipments);
+document.getElementById("trackingDisplay").textContent =
+"New tracking number: " + code;
+document.getElementById("trackingDisplay").hidden = false;
+alert("Shipment created. Tracking number: " + code);
+}
 
-alert("Demo shipment created. Tracking number: " + code);
-this.reset();
+resetForm();
 renderShipments();
 });
 
-document.getElementById("shipmentTable").addEventListener("click", function(e) {
-if (e.target.matches(".delete-button")) {
-const code = e.target.dataset.code;
-saveShipments(getShipments().filter(s => s.code !== code));
+document.getElementById("shipmentTable")
+.addEventListener("click", function(e) {
+const button = e.target.closest("button[data-action]");
+if (!button) return;
+
+const code = button.dataset.code;
+const shipments = getShipments();
+const shipment = shipments.find(s => s.code === code);
+
+if (button.dataset.action === "edit" && shipment) {
+document.getElementById("editCode").value = shipment.code;
+document.getElementById("sender").value = shipment.sender;
+document.getElementById("recipient").value = shipment.recipient;
+document.getElementById("origin").value = shipment.origin;
+document.getElementById("destination").value = shipment.destination;
+document.getElementById("location").value = shipment.location;
+document.getElementById("status").value = shipment.status;
+document.getElementById("message").value = shipment.message || "";
+
+document.getElementById("formTitle").textContent =
+"Update Shipment";
+document.getElementById("submitButton").textContent =
+"SAVE SHIPMENT UPDATE";
+document.getElementById("cancelButton").hidden = false;
+document.getElementById("trackingDisplay").textContent =
+"Tracking number: " + shipment.code;
+document.getElementById("trackingDisplay").hidden = false;
+
+window.scrollTo({top:0, behavior:"smooth"});
+}
+
+if (button.dataset.action === "delete") {
+if (!confirm("Are you sure you want to delete this shipment?")) return;
+saveShipments(shipments.filter(s => s.code !== code));
+resetForm();
 renderShipments();
 }
 });
+
+document.getElementById("cancelButton")
+.addEventListener("click", resetForm);
 
 renderShipments();
 </script>
