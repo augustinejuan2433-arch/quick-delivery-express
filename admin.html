@@ -1,15 +1,271 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Staff dashboard | Quick Delivery Express</title><link rel="stylesheet" href="styles.css"></head><body>
-<header class="site-header"><a class="brand" href="index.html"><span class="brand-mark">Q</span><span>QUICK DELIVERY <b>EXPRESS</b><small>OPERATIONS PORTAL</small></span></a><nav><a href="index.html">Public website</a><a href="track.html">Tracking page</a></nav></header>
-<main class="page-wrap admin-wrap"><p class="eyebrow">PRIVATE OPERATIONS</p><h1>Shipment management.</h1><div id="loginPanel" class="panel"><h2>Staff sign in</h2><p class="muted">Sign in with the administrator account created in Supabase.</p><form id="loginForm"><label>Email</label><input id="email" type="email" required autocomplete="username"><label>Password</label><input id="password" type="password" required autocomplete="current-password"><button class="button gold full">Sign in</button></form><p id="loginMessage" class="message" aria-live="polite"></p></div>
-<section id="dashboard" class="hidden"><div class="dash-head"><div><h2>Operations dashboard</h2><p class="muted">Create shipments and enter tracking updates manually.</p></div><button id="logout" class="button outline">Sign out</button></div>
-<div class="panel"><h2>Register a shipment</h2><form id="shipmentForm" class="form-grid">
-<div><label>Sender name *</label><input id="sender_name" required></div><div><label>Sender email</label><input id="sender_email" type="email"></div>
-<div><label>Recipient name *</label><input id="recipient_name" required></div><div><label>Recipient email</label><input id="recipient_email" type="email"></div>
-<div><label>Recipient phone</label><input id="recipient_phone"></div><div><label>Origin country *</label><select id="origin_country" required></select></div>
-<div><label>Destination country *</label><select id="destination_country" required></select></div><div><label>Estimated delivery</label><input id="estimated_delivery" type="date"></div>
-<div class="wide"><label>Current location</label><input id="latest_location" placeholder="e.g. London, United Kingdom"></div>
-<div class="wide"><label>Public tracking note</label><textarea id="public_note" rows="2" placeholder="A short update visible to the recipient"></textarea></div>
-<div class="wide"><button class="button gold">Create shipment & tracking number</button></div></form><p id="createMessage" class="message" aria-live="polite"></p></div>
-<div class="panel"><div class="dash-head"><h2>Recent shipments</h2><button id="refresh" class="button outline">Refresh</button></div><div id="shipments" class="shipment-list"><p class="muted">Loading shipments…</p></div></div></section></main>
-<footer><span>Quick Delivery Express • Private staff portal</span><span>Keep administrator credentials confidential.</span></footer>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><script src="admin.js"></script></body></html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staff Dashboard | Quick Delivery Express</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.dashboard {
+background:#f6f5f1;
+min-height:100vh;
+padding:45px 6%;
+}
+.dashboard-header {
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:20px;
+flex-wrap:wrap;
+margin-bottom:30px;
+}
+.dashboard-header h1 {font-size:30px;}
+.dashboard-header span {color:#a27e2e;}
+.panel {
+background:white;
+padding:25px;
+margin-bottom:25px;
+border-top:3px solid #c9a44c;
+}
+.panel h2 {margin-bottom:20px;}
+.form-grid {
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:15px;
+}
+.form-grid label {
+display:block;
+font-size:13px;
+font-weight:bold;
+margin-bottom:7px;
+}
+.form-grid input,.form-grid select,.form-grid textarea {
+width:100%;
+padding:13px;
+border:1px solid #ddd;
+font-size:14px;
+background:white;
+}
+.form-grid textarea {min-height:85px;}
+.form-grid .full-field {grid-column:1/-1;}
+.gold-button {
+background:#c9a44c;
+color:#090909;
+padding:14px 22px;
+border:0;
+font-weight:bold;
+cursor:pointer;
+}
+.shipment-list {
+overflow-x:auto;
+}
+table {
+width:100%;
+border-collapse:collapse;
+min-width:650px;
+}
+th,td {
+padding:13px;
+border-bottom:1px solid #eee;
+text-align:left;
+font-size:13px;
+}
+th {background:#090909;color:#c9a44c;}
+.delete-button {
+background:#8b2525;
+color:white;
+border:0;
+padding:8px 10px;
+cursor:pointer;
+}
+.notice {
+background:#fff3d5;
+padding:15px;
+margin-bottom:20px;
+font-size:13px;
+}
+@media(max-width:650px) {
+.form-grid {grid-template-columns:1fr;}
+.form-grid .full-field {grid-column:auto;}
+.dashboard {padding:30px 4%;}
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+<a class="brand" href="index.html">
+<span class="brand-mark">Q</span>
+<span>QUICK DELIVERY <b>EXPRESS</b>
+<small>INTERNATIONAL LOGISTICS</small></span>
+</a>
+<nav>
+<a href="index.html">Home</a>
+<a href="track.html">Tracking Page</a>
+</nav>
+</header>
+
+<main class="dashboard">
+<div class="dashboard-header">
+<div>
+<p class="eyebrow">OPERATIONS MANAGEMENT</p>
+<h1>Staff <span>Dashboard</span></h1>
+</div>
+<a class="button gold" href="track.html">View Tracking Page</a>
+</div>
+
+<div class="notice">
+<strong>Important:</strong> This is a demonstration dashboard. Shipment records are currently stored only in this browser. A secure database and staff login must be connected before handling real customer information.
+</div>
+
+<section class="panel">
+<h2>Register New Shipment</h2>
+
+<form id="shipmentForm" class="form-grid">
+<div>
+<label for="sender">Sender Name</label>
+<input id="sender" required>
+</div>
+
+<div>
+<label for="recipient">Recipient Name</label>
+<input id="recipient" required>
+</div>
+
+<div>
+<label for="origin">Origin Country</label>
+<input id="origin" placeholder="United States" required>
+</div>
+
+<div>
+<label for="destination">Destination Country</label>
+<input id="destination" placeholder="United Kingdom" required>
+</div>
+
+<div>
+<label for="location">Current Location</label>
+<input id="location" placeholder="London, United Kingdom" required>
+</div>
+
+<div>
+<label for="status">Shipment Status</label>
+<select id="status">
+<option>Shipment Registered</option>
+<option>Picked Up</option>
+<option>In Transit</option>
+<option>Arrived at Facility</option>
+<option>Out for Delivery</option>
+<option>Delivered</option>
+<option>On Hold</option>
+</select>
+</div>
+
+<div class="full-field">
+<label for="message">Shipment Update</label>
+<textarea id="message" placeholder="Enter shipment information..."></textarea>
+</div>
+
+<div class="full-field">
+<button class="gold-button" type="submit">CREATE SHIPMENT</button>
+</div>
+</form>
+</section>
+
+<section class="panel">
+<h2>Shipment Records</h2>
+<div class="shipment-list">
+<table>
+<thead>
+<tr>
+<th>Tracking Number</th>
+<th>Recipient</th>
+<th>Destination</th>
+<th>Status</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody id="shipmentTable">
+<tr><td colspan="5">No shipments registered yet.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+</main>
+
+<footer>
+<span>© 2026 Quick Delivery Express. All rights reserved.</span>
+<span>United States • United Kingdom</span>
+</footer>
+
+<script>
+const STORAGE_KEY = "qde_demo_shipments";
+
+function getShipments() {
+return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+}
+
+function saveShipments(data) {
+localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function renderShipments() {
+const table = document.getElementById("shipmentTable");
+const shipments = getShipments();
+
+if (!shipments.length) {
+table.innerHTML = '<tr><td colspan="5">No shipments registered yet.</td></tr>';
+return;
+}
+
+table.innerHTML = shipments.map(s => `
+<tr>
+<td>${s.code}</td>
+<td>${s.recipient}</td>
+<td>${s.destination}</td>
+<td>${s.status}</td>
+<td><button class="delete-button" data-code="${s.code}">Delete</button></td>
+</tr>
+`).join("");
+}
+
+document.getElementById("shipmentForm").addEventListener("submit", function(e) {
+e.preventDefault();
+
+const shipments = getShipments();
+const code = "QDE-2026-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+
+const shipment = {
+code,
+sender: document.getElementById("sender").value,
+recipient: document.getElementById("recipient").value,
+origin: document.getElementById("origin").value,
+destination: document.getElementById("destination").value,
+location: document.getElementById("location").value,
+status: document.getElementById("status").value,
+message: document.getElementById("message").value,
+date: new Date().toLocaleString()
+};
+
+shipments.push(shipment);
+saveShipments(shipments);
+
+alert("Demo shipment created. Tracking number: " + code);
+this.reset();
+renderShipments();
+});
+
+document.getElementById("shipmentTable").addEventListener("click", function(e) {
+if (e.target.matches(".delete-button")) {
+const code = e.target.dataset.code;
+saveShipments(getShipments().filter(s => s.code !== code));
+renderShipments();
+}
+});
+
+renderShipments();
+</script>
+
+</body>
+  </html>
+  
