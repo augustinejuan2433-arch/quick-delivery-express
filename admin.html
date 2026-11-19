@@ -84,7 +84,7 @@ th{color:#d5ad36}
 <input id="recipientEmail" type="email">
 </div>
 <div>
-<label>Recipient Phone Number</label>
+<label>recipient_phone</label>
 <input id="recipientPhone">
 </div>
 <div>
@@ -244,7 +244,7 @@ function getFormData(){
     sender_email:$("senderEmail").value.trim() || null,
     recipient_name:$("recipientName").value.trim(),
     recipient_email:$("recipientEmail").value.trim() || null,
-    recipient_phone_number:$("recipientPhone").value.trim() || null,
+    recipient_phone:$("recipientPhone").value.trim() || null,
     origin_country:$("origin").value.trim(),
     destination_country:$("destination").value.trim(),
     latest_location:$("location").value.trim(),
