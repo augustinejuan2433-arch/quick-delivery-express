@@ -4,166 +4,103 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Staff Dashboard | Quick Delivery Express</title>
-<link rel="stylesheet" href="styles.css">
+<title>Quick Delivery Express | Staff Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-.dashboard {
-background:#f6f5f1;
-min-height:100vh;
-padding:35px 5%;
-}
-.dashboard-header {
-display:flex;
-justify-content:space-between;
-align-items:center;
-gap:15px;
-flex-wrap:wrap;
-margin-bottom:25px;
-}
-.dashboard-header h1 {font-size:30px;}
-.dashboard-header span {color:#a27e2e;}
-.panel {
-background:white;
-padding:22px;
-margin-bottom:22px;
-border-top:3px solid #c9a44c;
-}
-.panel h2 {margin-bottom:18px;}
-.form-grid {
-display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:15px;
-}
-.form-grid label {
-display:block;
-font-size:13px;
-font-weight:bold;
-margin-bottom:7px;
-}
-.form-grid input,.form-grid select,.form-grid textarea {
-width:100%;
-padding:13px;
-border:1px solid #ddd;
-font-size:14px;
-background:white;
-}
-.form-grid textarea {min-height:85px;}
-.full-field {grid-column:1/-1;}
-.gold-button {
-background:#c9a44c;
-color:#090909;
-padding:13px 20px;
-border:0;
-font-weight:bold;
-cursor:pointer;
-}
-.cancel-button {
-background:#555;
-color:white;
-padding:13px 20px;
-border:0;
-cursor:pointer;
-}
-.shipment-list {overflow-x:auto;}
-table {
-width:100%;
-border-collapse:collapse;
-min-width:750px;
-}
-th,td {
-padding:12px;
-border-bottom:1px solid #eee;
-text-align:left;
-font-size:13px;
-}
-th {background:#090909;color:#c9a44c;}
-.action-button {
-border:0;
-padding:8px 10px;
-margin:2px;
-cursor:pointer;
-font-weight:bold;
-}
-.edit-button {background:#c9a44c;color:#090909;}
-.delete-button {background:#8b2525;color:white;}
-.notice {
-background:#fff3d5;
-padding:14px;
-margin-bottom:20px;
-font-size:13px;
-}
-.tracking-code {
-background:#f5edda;
-padding:12px;
-font-weight:bold;
-}
-@media(max-width:650px) {
-.form-grid {grid-template-columns:1fr;}
-.full-field {grid-column:auto;}
-.dashboard {padding:25px 4%;}
-}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#101010;color:#fff;padding:20px}
+.container{max-width:1050px;margin:auto}
+header{border-bottom:2px solid #c9a227;padding-bottom:15px;margin-bottom:25px}
+h1{color:#d5ad36;margin-bottom:5px}
+h2{color:#d5ad36}
+.panel{background:#1c1c1c;padding:22px;border:1px solid #444;border-radius:10px;margin-bottom:20px}
+input,select,textarea{width:100%;padding:12px;margin:7px 0 15px;background:#292929;color:white;border:1px solid #555;border-radius:5px}
+button{background:#c9a227;color:#111;border:0;padding:12px 18px;border-radius:5px;font-weight:bold;cursor:pointer;margin:5px 3px}
+button.secondary{background:#444;color:white}
+button:disabled{opacity:.5}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+label{font-size:13px;color:#ddd}
+table{width:100%;border-collapse:collapse;min-width:650px}
+th,td{padding:12px;border-bottom:1px solid #444;text-align:left}
+th{color:#d5ad36}
+.table-wrap{overflow-x:auto}
+#dashboard{display:none}
+#message{padding:12px;margin:10px 0;border-radius:5px;display:none;white-space:pre-wrap}
+.good{background:#173c25;color:#a7efbd}
+.bad{background:#4b2020;color:#ffb0b0}
+.small{color:#aaa;font-size:13px}
 </style>
 </head>
 <body>
-
-<header class="site-header">
-<a class="brand" href="index.html">
-<span class="brand-mark">Q</span>
-<span>QUICK DELIVERY <b>EXPRESS</b>
-<small>INTERNATIONAL LOGISTICS</small></span>
-</a>
-<nav>
-<a href="index.html">Home</a>
-<a href="track.html">Tracking Page</a>
-</nav>
+<div class="container">
+<header>
+<h1>QUICK DELIVERY EXPRESS</h1>
+<p>Staff Shipment Management Portal</p>
 </header>
 
-<main class="dashboard">
-<div class="dashboard-header">
-<div>
-<p class="eyebrow">OPERATIONS MANAGEMENT</p>
-<h1>Staff <span>Dashboard</span></h1>
+<div id="message"></div>
+
+<section id="loginPanel" class="panel">
+<h2>Staff Login</h2>
+<form id="loginForm">
+<label>Email address</label>
+<input id="email" type="email" required autocomplete="username">
+<label>Password</label>
+<input id="password" type="password" required autocomplete="current-password">
+<button type="submit" id="loginButton">Log In</button>
+</form>
+<p class="small">Authorised staff only.</p>
+</section>
+
+<section id="dashboard">
+<div class="panel">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+<h2>Staff Dashboard</h2>
+<button class="secondary" id="logoutButton">Log Out</button>
 </div>
-<a class="button gold" href="track.html">View Tracking Page</a>
+<p id="staffEmail" class="small"></p>
 </div>
 
-<div class="notice">
-<strong>Demonstration version:</strong> Records are saved only in this browser. Connect a secure shared database and staff login before using real customer information.
-</div>
-
-<section class="panel">
+<div class="panel">
 <h2 id="formTitle">Register New Shipment</h2>
+<form id="shipmentForm">
+<input type="hidden" id="shipmentId">
 
-<form id="shipmentForm" class="form-grid">
-<input type="hidden" id="editCode">
-
+<div class="grid">
 <div>
-<label for="sender">Sender Name</label>
-<input id="sender" required>
+<label>Sender Name</label>
+<input id="senderName" required>
 </div>
-
 <div>
-<label for="recipient">Recipient Name</label>
-<input id="recipient" required>
+<label>Sender Email</label>
+<input id="senderEmail" type="email">
 </div>
-
 <div>
-<label for="origin">Origin Country</label>
-<input id="origin" placeholder="United States" required>
+<label>Recipient Name</label>
+<input id="recipientName" required>
 </div>
-
 <div>
-<label for="destination">Destination Country</label>
-<input id="destination" placeholder="United Kingdom" required>
+<label>Recipient Email</label>
+<input id="recipientEmail" type="email">
 </div>
-
 <div>
-<label for="location">Current Location</label>
-<input id="location" placeholder="London, United Kingdom" required>
+<label>Recipient Phone Number</label>
+<input id="recipientPhone">
 </div>
-
 <div>
-<label for="status">Shipment Status</label>
+<label>Origin Country</label>
+<input id="origin" required>
+</div>
+<div>
+<label>Destination Country</label>
+<input id="destination" required>
+</div>
+<div>
+<label>Latest Location</label>
+<input id="location" required>
+</div>
+<div>
+<label>Shipment Status</label>
 <select id="status">
 <option>Shipment Registered</option>
 <option>Picked Up</option>
@@ -174,211 +111,275 @@ font-weight:bold;
 <option>On Hold</option>
 </select>
 </div>
-
-<div class="full-field">
-<label for="message">Shipment Update</label>
-<textarea id="message" placeholder="Enter shipment information..."></textarea>
+<div>
+<label>Estimated Delivery</label>
+<input id="estimatedDelivery" type="date">
+</div>
 </div>
 
-<div class="full-field">
-<p id="trackingDisplay" class="tracking-code" hidden></p>
-</div>
+<label>Public Tracking Update</label>
+<textarea id="publicNote" rows="3" placeholder="Message customers can see when tracking..."></textarea>
 
-<div class="full-field">
-<button class="gold-button" id="submitButton" type="submit">CREATE SHIPMENT</button>
-<button class="cancel-button" id="cancelButton" type="button" hidden>Cancel Edit</button>
-</div>
+<button type="submit" id="saveButton">Register Shipment</button>
+<button type="button" class="secondary" id="cancelEdit" style="display:none">Cancel Edit</button>
 </form>
-</section>
+</div>
 
-<section class="panel">
+<div class="panel">
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap">
 <h2>Shipment Records</h2>
-<div class="shipment-list">
+<button type="button" id="refreshButton">Refresh Records</button>
+</div>
+<div class="table-wrap">
 <table>
 <thead>
 <tr>
 <th>Tracking Number</th>
 <th>Recipient</th>
 <th>Destination</th>
-<th>Location</th>
 <th>Status</th>
-<th>Actions</th>
+<th>Action</th>
 </tr>
 </thead>
-<tbody id="shipmentTable">
-<tr><td colspan="6">No shipments registered yet.</td></tr>
+<tbody id="shipmentRows">
+<tr><td colspan="5">Loading shipments...</td></tr>
 </tbody>
 </table>
 </div>
+</div>
 </section>
-</main>
-
-<footer>
-<span>© 2026 Quick Delivery Express. All rights reserved.</span>
-<span>United States • United Kingdom</span>
-</footer>
+</div>
 
 <script>
-const STORAGE_KEY = "qde_demo_shipments";
+// Add your Supabase project details here.
+const SUPABASE_URL = "https://aqfzyfbhyupomcvveqlz.supabase.co";
+const SUPABASE_KEY = "sb_publishable_NYH1pUAG9OfE44AxkH2uxQ_QpFszNUG";
 
-function getShipments() {
-try {
-return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-} catch {
-return [];
-}
-}
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-function saveShipments(data) {
-localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
+const $ = id => document.getElementById(id);
 
-function generateCode() {
-let code;
-const shipments = getShipments();
-do {
-code = "QDE-2026-" +
-Math.random().toString(36).substring(2, 8).toUpperCase();
-} while (shipments.some(s => s.code === code));
-return code;
+function showMessage(message, success=false){
+  $("message").textContent = message;
+  $("message").className = success ? "good" : "bad";
+  $("message").style.display = "block";
+  window.scrollTo({top:0,behavior:"smooth"});
 }
 
-function escapeHTML(value) {
-return String(value ?? "").replace(/[&<>"']/g, char => ({
-"&":"&amp;",
-"<":"&lt;",
-">":"&gt;",
-'"':"&quot;",
-"'":"&#039;"
-})[char]);
+function clearMessage(){
+  $("message").style.display = "none";
 }
 
-function renderShipments() {
-const table = document.getElementById("shipmentTable");
-const shipments = getShipments();
-
-if (!shipments.length) {
-table.innerHTML =
-'<tr><td colspan="6">No shipments registered yet.</td></tr>';
-return;
+function showDashboard(user){
+  $("loginPanel").style.display = "none";
+  $("dashboard").style.display = "block";
+  $("staffEmail").textContent = "Logged in as: " + user.email;
 }
 
-table.innerHTML = shipments.map(s => `
-<tr>
-<td>${escapeHTML(s.code)}</td>
-<td>${escapeHTML(s.recipient)}</td>
-<td>${escapeHTML(s.destination)}</td>
-<td>${escapeHTML(s.location)}</td>
-<td>${escapeHTML(s.status)}</td>
-<td>
-<button class="action-button edit-button"
-data-action="edit" data-code="${escapeHTML(s.code)}">Edit</button>
-<button class="action-button delete-button"
-data-action="delete" data-code="${escapeHTML(s.code)}">Delete</button>
-</td>
-</tr>
-`).join("");
+function showLogin(){
+  $("loginPanel").style.display = "block";
+  $("dashboard").style.display = "none";
 }
 
-function resetForm() {
-document.getElementById("shipmentForm").reset();
-document.getElementById("editCode").value = "";
-document.getElementById("formTitle").textContent = "Register New Shipment";
-document.getElementById("submitButton").textContent = "CREATE SHIPMENT";
-document.getElementById("cancelButton").hidden = true;
-document.getElementById("trackingDisplay").hidden = true;
+async function checkSession(){
+  const {data,error} = await db.auth.getSession();
+  if(error){showMessage(error.message);return;}
+  if(data.session){
+    const {data:allowed,error:staffError} = await db.rpc("is_staff");
+    if(staffError || allowed !== true){
+      await db.auth.signOut();
+      showLogin();
+      showMessage("This account is not authorised as staff.");
+      return;
+    }
+    showDashboard(data.session.user);
+    await loadShipments();
+  }else{
+    showLogin();
+  }
 }
 
-document.getElementById("shipmentForm")
-.addEventListener("submit", function(e) {
-e.preventDefault();
+$("loginForm").addEventListener("submit",async event=>{
+  event.preventDefault();
+  clearMessage();
+  $("loginButton").disabled = true;
+  $("loginButton").textContent = "Logging in...";
 
-const shipments = getShipments();
-const editCode = document.getElementById("editCode").value;
+  const {data,error} = await db.auth.signInWithPassword({
+    email:$("email").value.trim(),
+    password:$("password").value
+  });
 
-const details = {
-sender: document.getElementById("sender").value.trim(),
-recipient: document.getElementById("recipient").value.trim(),
-origin: document.getElementById("origin").value.trim(),
-destination: document.getElementById("destination").value.trim(),
-location: document.getElementById("location").value.trim(),
-status: document.getElementById("status").value,
-message: document.getElementById("message").value.trim()
-};
+  $("loginButton").disabled = false;
+  $("loginButton").textContent = "Log In";
 
-if (editCode) {
-const index = shipments.findIndex(s => s.code === editCode);
-if (index === -1) {
-alert("Shipment not found.");
-return;
-}
-shipments[index] = {...shipments[index], ...details,
-updated: new Date().toLocaleString()};
-saveShipments(shipments);
-alert("Shipment updated successfully.");
-} else {
-const code = generateCode();
-shipments.push({
-...details,
-code,
-date: new Date().toLocaleString()
-});
-saveShipments(shipments);
-document.getElementById("trackingDisplay").textContent =
-"New tracking number: " + code;
-document.getElementById("trackingDisplay").hidden = false;
-alert("Shipment created. Tracking number: " + code);
-}
+  if(error){showMessage(error.message);return;}
 
-resetForm();
-renderShipments();
+  const {data:allowed,error:staffError} = await db.rpc("is_staff");
+  if(staffError || allowed !== true){
+    await db.auth.signOut();
+    showMessage("Your account is not authorised for staff access.");
+    return;
+  }
+
+  showDashboard(data.user);
+  showMessage("Staff login successful.",true);
+  await loadShipments();
 });
 
-document.getElementById("shipmentTable")
-.addEventListener("click", function(e) {
-const button = e.target.closest("button[data-action]");
-if (!button) return;
-
-const code = button.dataset.code;
-const shipments = getShipments();
-const shipment = shipments.find(s => s.code === code);
-
-if (button.dataset.action === "edit" && shipment) {
-document.getElementById("editCode").value = shipment.code;
-document.getElementById("sender").value = shipment.sender;
-document.getElementById("recipient").value = shipment.recipient;
-document.getElementById("origin").value = shipment.origin;
-document.getElementById("destination").value = shipment.destination;
-document.getElementById("location").value = shipment.location;
-document.getElementById("status").value = shipment.status;
-document.getElementById("message").value = shipment.message || "";
-
-document.getElementById("formTitle").textContent =
-"Update Shipment";
-document.getElementById("submitButton").textContent =
-"SAVE SHIPMENT UPDATE";
-document.getElementById("cancelButton").hidden = false;
-document.getElementById("trackingDisplay").textContent =
-"Tracking number: " + shipment.code;
-document.getElementById("trackingDisplay").hidden = false;
-
-window.scrollTo({top:0, behavior:"smooth"});
-}
-
-if (button.dataset.action === "delete") {
-if (!confirm("Are you sure you want to delete this shipment?")) return;
-saveShipments(shipments.filter(s => s.code !== code));
-resetForm();
-renderShipments();
-}
+$("logoutButton").addEventListener("click",async()=>{
+  await db.auth.signOut();
+  showLogin();
+  showMessage("You have logged out successfully.",true);
 });
 
-document.getElementById("cancelButton")
-.addEventListener("click", resetForm);
+function makeTrackingNumber(){
+  const random = Math.floor(100000 + Math.random()*900000);
+  return "QDE-2026-" + random;
+}
 
-renderShipments();
+function getFormData(){
+  return {
+    sender_name:$("senderName").value.trim(),
+    sender_email:$("senderEmail").value.trim() || null,
+    recipient_name:$("recipientName").value.trim(),
+    recipient_email:$("recipientEmail").value.trim() || null,
+    recipient_phone_number:$("recipientPhone").value.trim() || null,
+    origin_country:$("origin").value.trim(),
+    destination_country:$("destination").value.trim(),
+    latest_location:$("location").value.trim(),
+    status_label:$("status").value,
+    estimated_delivery:$("estimatedDelivery").value || null,
+    public_note:$("publicNote").value.trim() || null,
+    updated_at:new Date().toISOString()
+  };
+}
+
+$("shipmentForm").addEventListener("submit",async event=>{
+  event.preventDefault();
+  clearMessage();
+
+  const id = $("shipmentId").value;
+  const payload = getFormData();
+
+  $("saveButton").disabled = true;
+
+  let result;
+
+  if(id){
+    result = await db.from("shipments")
+      .update(payload)
+      .eq("id",id)
+      .select();
+  }else{
+    payload.tracking_number = makeTrackingNumber();
+    result = await db.from("shipments")
+      .insert(payload)
+      .select();
+  }
+
+  $("saveButton").disabled = false;
+
+  if(result.error){
+    showMessage("Could not save shipment: " + result.error.message);
+    return;
+  }
+
+  const tracking = result.data && result.data[0]
+    ? result.data[0].tracking_number : "";
+
+  resetForm();
+  showMessage(id ? "Shipment updated successfully." :
+    "Shipment registered successfully. Tracking number: " + tracking,true);
+  await loadShipments();
+});
+
+async function loadShipments(){
+  $("shipmentRows").innerHTML =
+    '<tr><td colspan="5">Loading shipments...</td></tr>';
+
+  const {data,error} = await db.from("shipments")
+    .select("*")
+    .order("created_at",{ascending:false});
+
+  if(error){
+    $("shipmentRows").innerHTML =
+      '<tr><td colspan="5">Unable to load shipments.</td></tr>';
+    showMessage("Loading error: " + error.message);
+    return;
+  }
+
+  if(!data.length){
+    $("shipmentRows").innerHTML =
+      '<tr><td colspan="5">No shipments registered yet.</td></tr>';
+    return;
+  }
+
+  $("shipmentRows").innerHTML = "";
+
+  data.forEach(shipment=>{
+    const tr = document.createElement("tr");
+
+    const values = [
+      shipment.tracking_number,
+      shipment.recipient_name,
+      shipment.destination_country,
+      shipment.status_label
+    ];
+
+    values.forEach(value=>{
+      const td = document.createElement("td");
+      td.textContent = value || "-";
+      tr.appendChild(td);
+    });
+
+    const action = document.createElement("td");
+    const edit = document.createElement("button");
+    edit.textContent = "Edit";
+    edit.addEventListener("click",()=>editShipment(shipment));
+    action.appendChild(edit);
+    tr.appendChild(action);
+
+    $("shipmentRows").appendChild(tr);
+  });
+}
+
+function editShipment(s){
+  $("shipmentId").value = s.id;
+  $("senderName").value = s.sender_name || "";
+  $("senderEmail").value = s.sender_email || "";
+  $("recipientName").value = s.recipient_name || "";
+  $("recipientEmail").value = s.recipient_email || "";
+  $("recipientPhone").value = s.recipient_phone_number || "";
+  $("origin").value = s.origin_country || "";
+  $("destination").value = s.destination_country || "";
+  $("location").value = s.latest_location || "";
+  $("status").value = s.status_label || "Shipment Registered";
+  $("estimatedDelivery").value = s.estimated_delivery || "";
+  $("publicNote").value = s.public_note || "";
+
+  $("formTitle").textContent = "Edit Shipment: " + s.tracking_number;
+  $("saveButton").textContent = "Save Shipment Update";
+  $("cancelEdit").style.display = "inline-block";
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function resetForm(){
+  $("shipmentForm").reset();
+  $("shipmentId").value = "";
+  $("formTitle").textContent = "Register New Shipment";
+  $("saveButton").textContent = "Register Shipment";
+  $("cancelEdit").style.display = "none";
+}
+
+$("cancelEdit").addEventListener("click",resetForm);
+$("refreshButton").addEventListener("click",loadShipments);
+
+db.auth.onAuthStateChange((event,session)=>{
+  if(event === "SIGNED_OUT") showLogin();
+});
+
+checkSession();
 </script>
-
 </body>
-  </html>
-  
+</html>
