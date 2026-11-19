@@ -52,10 +52,13 @@
 <h2>Shipment Information</h2>
 <div class="status" id="shipmentStatus"></div>
 <p><strong>Tracking Number:</strong> <span id="displayCode"></span></p>
+<p><strong>Sender:</strong> <span id="displaySender"></span></p>
+<p><strong>Recipient:</strong> <span id="displayRecipient"></span></p>
+<p><strong>Origin:</strong> <span id="displayOrigin"></span></p>
 <p><strong>Current Location:</strong> <span id="displayLocation"></span></p>
 <p><strong>Destination:</strong> <span id="displayDestination"></span></p>
-<p><strong>Estimated Delivery:</strong> <span id="displayDate"></span></p>
-<p><strong>Update:</strong> <span id="displayMessage"></span></p>
+<p><strong>Last Update:</strong> <span id="displayDate"></span></p>
+<p><strong>Shipment Update:</strong> <span id="displayMessage"></span></p>
 </div>
 
 <a class="back-link" href="index.html">← Back to Homepage</a>
@@ -72,68 +75,58 @@
 </footer>
 
 <script>
-const SUPABASE_URL = "https://aqfzyfbhyupomcvveqlz.supabase.co";
-const SUPABASE_KEY = "PASTE_YOUR_PUBLISHABLE_KEY_HERE";
+const STORAGE_KEY = "qde_demo_shipments";
 
-document.getElementById("trackForm").addEventListener("submit", async function(e) {
+function show(id, value) {
+document.getElementById(id).textContent = value || "Not available";
+}
+
+document.getElementById("trackForm").addEventListener("submit", function(e) {
 e.preventDefault();
 
-const code = document.getElementById("trackingNumber").value.trim();
+const code = document.getElementById("trackingNumber").value.trim().toUpperCase();
 const result = document.getElementById("result");
-const button = document.getElementById("trackButton");
 
-button.disabled = true;
-button.textContent = "SEARCHING...";
 result.style.display = "block";
 
+let shipments = [];
+
 try {
-const response = await fetch(
-SUPABASE_URL + "/rest/v1/rpc/track_shipment",
-{
-method: "POST",
-headers: {
-"Content-Type": "application/json",
-"apikey": SUPABASE_KEY,
-"Authorization": "Bearer " + SUPABASE_KEY
-},
-body: JSON.stringify({p_tracking_number: code})
+shipments = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+} catch(error) {
+show("shipmentStatus", "ERROR");
+show("displayMessage", "Unable to read shipment records.");
+return;
 }
+
+const shipment = shipments.find(s =>
+String(s.code).toUpperCase() === code
 );
 
-if (!response.ok) {
-throw new Error("Tracking service error: " + response.status);
-}
-
-const data = await response.json();
-const shipment = data[0];
-
 if (!shipment) {
-document.getElementById("shipmentStatus").textContent = "NOT FOUND";
-document.getElementById("displayCode").textContent = code;
-document.getElementById("displayLocation").textContent = "Not available";
-document.getElementById("displayDestination").textContent = "Not available";
-document.getElementById("displayDate").textContent = "Not available";
-document.getElementById("displayMessage").textContent = "We could not find this tracking number. Please check it and try again.";
-} else {
-document.getElementById("shipmentStatus").textContent = shipment.status_label || "Shipment Registered";
-document.getElementById("displayCode").textContent = shipment.tracking_number || code;
-document.getElementById("displayLocation").textContent = shipment.latest_location || "Update pending";
-document.getElementById("displayDestination").textContent = shipment.destination_country || "Not available";
-document.getElementById("displayDate").textContent = shipment.estimated_delivery || "Not available";
-document.getElementById("displayMessage").textContent = shipment.public_note || "No additional update.";
-}
-} catch (error) {
-document.getElementById("shipmentStatus").textContent = "SERVICE UNAVAILABLE";
-document.getElementById("displayCode").textContent = code;
-document.getElementById("displayLocation").textContent = "Not available";
-document.getElementById("displayDestination").textContent = "Not available";
-document.getElementById("displayDate").textContent = "Not available";
-document.getElementById("displayMessage").textContent = "Please try again later or contact support.";
+show("shipmentStatus", "TRACKING NUMBER NOT FOUND");
+show("displayCode", code);
+show("displaySender", "");
+show("displayRecipient", "");
+show("displayOrigin", "");
+show("displayLocation", "");
+show("displayDestination", "");
+show("displayDate", "");
+show("displayMessage", "Please check your tracking number and try again.");
+return;
 }
 
-button.disabled = false;
-button.textContent = "TRACK MY SHIPMENT →";
+show("shipmentStatus", shipment.status);
+show("displayCode", shipment.code);
+show("displaySender", shipment.sender);
+show("displayRecipient", shipment.recipient);
+show("displayOrigin", shipment.origin);
+show("displayLocation", shipment.location);
+show("displayDestination", shipment.destination);
+show("displayDate", shipment.updated || shipment.date);
+show("displayMessage", shipment.message || "No additional update.");
 });
 </script>
+
 </body>
 </html>
